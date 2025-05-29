@@ -2,9 +2,11 @@ package com.demo.entrymanager.service.impl;
 
 import com.demo.entrymanager.controller.FilterJournalEntryDto;
 import com.demo.entrymanager.dto.JournalEntryDto;
+import com.demo.entrymanager.exception.MissingScenarioException;
 import com.demo.entrymanager.model.JournalEntry;
 import com.demo.entrymanager.repository.JournalEntryRepository;
 import com.demo.entrymanager.service.JournalEntryService;
+import com.demo.entrymanager.util.ErrorMessages;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,11 +20,27 @@ public class JournalEntryServiceImpl implements JournalEntryService {
 
     @Override
     public JournalEntryDto createJournalEntry(JournalEntryDto journalEntryDto) {
+        if(journalEntryDto.scenario() == null || journalEntryDto.scenario().isBlank()){
+            throw  new MissingScenarioException(ErrorMessages.SCENARIO_MISSING);
+        }
+
         final JournalEntry newJournalEntry = new JournalEntry();
+        newJournalEntry.setScenario(journalEntryDto.scenario());
+        newJournalEntry.setStatus(journalEntryDto.status());
+        newJournalEntry.setDraftedDate(journalEntryDto.draftedDate());
 
-        final JournalEntry journalEntry = journalEntryRepository.save(newJournalEntry);
+        final JournalEntry savedJournalEntry = journalEntryRepository.save(newJournalEntry);
 
-        return null;
+        return new JournalEntryDto(
+                savedJournalEntry.getId(),
+                savedJournalEntry.getScenario(),
+                savedJournalEntry.getStatus(),
+                savedJournalEntry.getDraftedDate(),
+                null,
+                null,
+                null,
+                null
+        );
     }
 
     @Override
