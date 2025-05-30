@@ -4,11 +4,13 @@ import com.demo.entrymanager.controller.FilterJournalEntryDto;
 import com.demo.entrymanager.dto.JournalEntryDto;
 import com.demo.entrymanager.exception.MissingScenarioException;
 import com.demo.entrymanager.model.JournalEntry;
+import com.demo.entrymanager.model.Status;
 import com.demo.entrymanager.repository.JournalEntryRepository;
 import com.demo.entrymanager.service.JournalEntryService;
 import com.demo.entrymanager.util.ErrorMessages;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,8 +28,8 @@ public class JournalEntryServiceImpl implements JournalEntryService {
 
         final JournalEntry newJournalEntry = new JournalEntry();
         newJournalEntry.setScenario(journalEntryDto.scenario());
-        newJournalEntry.setStatus(journalEntryDto.status());
-        newJournalEntry.setDraftedDate(journalEntryDto.draftedDate());
+        newJournalEntry.setStatus(Status.DRAFT);
+        newJournalEntry.setDraftedDate(LocalDateTime.now());
 
         final JournalEntry savedJournalEntry = journalEntryRepository.save(newJournalEntry);
 

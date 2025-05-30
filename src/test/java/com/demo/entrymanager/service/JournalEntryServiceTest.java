@@ -9,6 +9,7 @@ import com.demo.entrymanager.service.impl.JournalEntryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -40,6 +41,7 @@ public class JournalEntryServiceTest {
                  //act
                  () -> journalEntryService.createJournalEntry(journalEntryDto));
     }
+
     @Test
     void givenJournalEntryDetails_whenJournalEntryIsCreated_thenSetsDraftStatusAndDraftedDate(){
         //arrange
@@ -51,10 +53,19 @@ public class JournalEntryServiceTest {
         //act
         final JournalEntryDto createdJournalEntryDto = journalEntryService.createJournalEntry(journalEntryDto);
 
-        //assert
+        //asserts if the framework is working...
         assertNotNull(createdJournalEntryDto);
         assertEquals(Status.DRAFT, createdJournalEntryDto.status());
         assertNotNull(createdJournalEntryDto.draftedDate());
+
+        //assert (the real one)
+        final ArgumentCaptor<JournalEntry> captor = ArgumentCaptor.forClass(JournalEntry.class);
+        verify(journalEntryRepository).save(captor.capture());
+        final JournalEntry capturedEntry = captor.getValue();
+        assertNotNull(capturedEntry.getScenario());
+        assertEquals(scenario, capturedEntry.getScenario());
+        assertEquals(Status.DRAFT, capturedEntry.getStatus());
+        assertNotNull(capturedEntry.getDraftedDate());
     }
 
     @Test
