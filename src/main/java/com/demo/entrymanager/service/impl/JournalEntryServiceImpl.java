@@ -2,6 +2,7 @@ package com.demo.entrymanager.service.impl;
 
 import com.demo.entrymanager.controller.FilterJournalEntryDto;
 import com.demo.entrymanager.dto.JournalEntryDto;
+import com.demo.entrymanager.exception.JournalEntryNotFoundException;
 import com.demo.entrymanager.exception.MissingScenarioException;
 import com.demo.entrymanager.model.Accountant;
 import com.demo.entrymanager.model.JournalEntry;
@@ -44,7 +45,8 @@ public class JournalEntryServiceImpl implements JournalEntryService {
 
     @Override
     public JournalEntryDto assignAccountantToJournalEntry(Long journalEntryId, Long accountantId) {
-        final JournalEntry journalEntry = journalEntryRepository.findById(journalEntryId).get();
+        final JournalEntry journalEntry = journalEntryRepository.findById(journalEntryId)
+                .orElseThrow(()->new JournalEntryNotFoundException(ErrorMessages.JOURNAL_ENTRY_NOT_FOUND));
         final Accountant accountant = accountantRepository.findById(accountantId).get();
 
         journalEntry.setStatus(Status.IN_REVIEW);

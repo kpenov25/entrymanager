@@ -1,6 +1,7 @@
 package com.demo.entrymanager.service;
 
 import com.demo.entrymanager.dto.JournalEntryDto;
+import com.demo.entrymanager.exception.JournalEntryNotFoundException;
 import com.demo.entrymanager.exception.MissingScenarioException;
 import com.demo.entrymanager.model.Accountant;
 import com.demo.entrymanager.model.JournalEntry;
@@ -34,6 +35,22 @@ public class JournalEntryServiceTest {
     @BeforeEach
     void setup(){
         journalEntryService = new JournalEntryServiceImpl(journalEntryRepository, accountantRepository);
+    }
+
+
+    @Test
+    void givenNonexistentJournalEntry_whenAssigningAccountant_thenThrowException(){
+        //arrange
+        final Long nonexistentJournalEntryId = Long.MAX_VALUE;
+        final Long accountantId = 1L;
+
+        when(journalEntryRepository.findById(nonexistentJournalEntryId)).thenReturn(Optional.empty());
+
+        //assert
+        assertThrows(JournalEntryNotFoundException.class,
+
+                //act
+                () -> journalEntryService.assignAccountantToJournalEntry(nonexistentJournalEntryId, accountantId));
     }
 
     @Test
