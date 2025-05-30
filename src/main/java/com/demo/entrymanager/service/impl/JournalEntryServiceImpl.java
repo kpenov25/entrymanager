@@ -3,8 +3,10 @@ package com.demo.entrymanager.service.impl;
 import com.demo.entrymanager.controller.FilterJournalEntryDto;
 import com.demo.entrymanager.dto.JournalEntryDto;
 import com.demo.entrymanager.exception.MissingScenarioException;
+import com.demo.entrymanager.model.Accountant;
 import com.demo.entrymanager.model.JournalEntry;
 import com.demo.entrymanager.model.Status;
+import com.demo.entrymanager.repository.AccountantRepository;
 import com.demo.entrymanager.repository.JournalEntryRepository;
 import com.demo.entrymanager.service.JournalEntryService;
 import com.demo.entrymanager.util.ErrorMessages;
@@ -12,12 +14,16 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class JournalEntryServiceImpl implements JournalEntryService {
     private JournalEntryRepository journalEntryRepository;
-    public JournalEntryServiceImpl(JournalEntryRepository journalEntryRepository) {
+    private AccountantRepository accountantRepository;
+
+    public JournalEntryServiceImpl(JournalEntryRepository journalEntryRepository, AccountantRepository accountantRepository) {
         this.journalEntryRepository = journalEntryRepository;
+        this.accountantRepository = accountantRepository;
     }
 
     @Override
@@ -33,21 +39,20 @@ public class JournalEntryServiceImpl implements JournalEntryService {
 
         final JournalEntry savedJournalEntry = journalEntryRepository.save(newJournalEntry);
 
-        return new JournalEntryDto(
-                savedJournalEntry.getId(),
-                savedJournalEntry.getScenario(),
-                savedJournalEntry.getStatus(),
-                savedJournalEntry.getDraftedDate(),
-                null,
-                null,
-                null,
-                null
-        );
+        return toJournalEntryDto(savedJournalEntry);
     }
 
     @Override
     public JournalEntryDto assignAccountantToJournalEntry(Long journalEntryId, Long accountantId) {
-        return null;
+        final JournalEntry journalEntry = journalEntryRepository.findById(journalEntryId).get();
+        final Accountant accountant = accountantRepository.findById(accountantId).get();
+
+        journalEntry.setStatus(Status.IN_REVIEW);
+        journalEntry.setAccountant(accountant);
+
+        final JournalEntry savedJournalEntry = journalEntryRepository.save(journalEntry);
+
+        return toJournalEntryDto(savedJournalEntry);
     }
 
     @Override
@@ -73,5 +78,18 @@ public class JournalEntryServiceImpl implements JournalEntryService {
     @Override
     public List<JournalEntryDto> getJournalEntries(FilterJournalEntryDto filterJournalEntryDto) {
         return null;
+    }
+
+    private JournalEntryDto toJournalEntryDto(final JournalEntry journalEntry){
+        return new JournalEntryDto(
+                journalEntry.getId(),
+                journalEntry.getScenario(),
+                journalEntry.getStatus(),
+                journalEntry.getDraftedDate(),
+                journalEntry.getReviewedDate(),
+                journalEntry.getAccountant() != null ? journalEntry.getAccountant().getName() : null,
+                journalEntry.getReviewNotes(),
+                journalEntry.getApproveNotes()
+        );
     }
 }

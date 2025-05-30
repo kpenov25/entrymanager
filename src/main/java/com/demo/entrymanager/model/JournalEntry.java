@@ -11,18 +11,16 @@ public class JournalEntry {
     private LocalDateTime reviewedDate;
     private String reviewNotes;
     private String approveNotes;
+    private Accountant accountant;
 
     public JournalEntry() {
     }
 
-    public JournalEntry(Long id, String scenario, Status status, LocalDateTime draftedDate, LocalDateTime reviewedDate, String reviewNotes, String approveNotes) {
+    public JournalEntry(Long id, String scenario, Status status, LocalDateTime draftedDate) {
         this.id = id;
         this.scenario = scenario;
         this.status = status;
         this.draftedDate = draftedDate;
-        this.reviewedDate = reviewedDate;
-        this.reviewNotes = reviewNotes;
-        this.approveNotes = approveNotes;
     }
 
     public Long getId() {
@@ -81,6 +79,14 @@ public class JournalEntry {
         this.approveNotes = approveNotes;
     }
 
+    public Accountant getAccountant() {
+        return accountant;
+    }
+
+    public void setAccountant(Accountant accountant) {
+        this.accountant = accountant;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -92,12 +98,13 @@ public class JournalEntry {
                 Objects.equals(draftedDate, journalEntry.draftedDate) &&
                 Objects.equals(reviewedDate, journalEntry.reviewedDate) &&
                 Objects.equals(reviewNotes, journalEntry.reviewNotes) &&
-                Objects.equals(approveNotes, journalEntry.approveNotes);
+                Objects.equals(approveNotes, journalEntry.approveNotes)&&
+                Objects.equals(accountant, journalEntry.accountant);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, scenario, status, draftedDate, reviewedDate, reviewNotes, approveNotes);
+        return Objects.hash(id, scenario, status, draftedDate, reviewedDate, reviewNotes, approveNotes, accountant);
     }
 
 }
