@@ -2,8 +2,7 @@ package com.demo.entrymanager.service.impl;
 
 import com.demo.entrymanager.controller.FilterJournalEntryDto;
 import com.demo.entrymanager.dto.JournalEntryDto;
-import com.demo.entrymanager.exception.JournalEntryNotFoundException;
-import com.demo.entrymanager.exception.MissingScenarioException;
+import com.demo.entrymanager.exception.*;
 import com.demo.entrymanager.model.Accountant;
 import com.demo.entrymanager.model.JournalEntry;
 import com.demo.entrymanager.model.Status;
@@ -28,7 +27,7 @@ public class JournalEntryServiceImpl implements JournalEntryService {
     }
 
     @Override
-    public JournalEntryDto createJournalEntry(JournalEntryDto journalEntryDto) {
+    public JournalEntryDto createJournalEntry(final JournalEntryDto journalEntryDto) {
         if(journalEntryDto.scenario() == null || journalEntryDto.scenario().isBlank()){
             throw  new MissingScenarioException(ErrorMessages.SCENARIO_MISSING);
         }
@@ -44,10 +43,14 @@ public class JournalEntryServiceImpl implements JournalEntryService {
     }
 
     @Override
-    public JournalEntryDto assignAccountantToJournalEntry(Long journalEntryId, Long accountantId) {
+    public JournalEntryDto assignAccountantToJournalEntry(final Long journalEntryId, final Long accountantId) {
         final JournalEntry journalEntry = journalEntryRepository.findById(journalEntryId)
                 .orElseThrow(()->new JournalEntryNotFoundException(ErrorMessages.JOURNAL_ENTRY_NOT_FOUND));
-        final Accountant accountant = accountantRepository.findById(accountantId).get();
+        if(journalEntry.getStatus() == null || journalEntry.getStatus() != Status.DRAFT){
+            throw new InvalidJournalEntryStateException(ErrorMessages.ONLY_JOURNAL_ENTRY_WITH_STATUS_DRAFT_CAN_BE_ASSIGNED_TO_AN_ACCOUNTANT);
+        }
+        final Accountant accountant = accountantRepository.findById(accountantId)
+                .orElseThrow(()->new AccountantNotFoundException(ErrorMessages.ACCOUNTANT_NOT_FOUND));
 
         journalEntry.setStatus(Status.IN_REVIEW);
         journalEntry.setAccountant(accountant);
@@ -58,13 +61,34 @@ public class JournalEntryServiceImpl implements JournalEntryService {
     }
 
     @Override
-    public JournalEntryDto reviewJournalEntry(Long journalEntryId) {
-        return null;
+    public JournalEntryDto reviewJournalEntry(final Long journalEntryId) {
+        final JournalEntry journalEntry = journalEntryRepository.findById(journalEntryId)
+                .orElseThrow(()->new JournalEntryNotFoundException(ErrorMessages.JOURNAL_ENTRY_NOT_FOUND));
+
+        if(journalEntry.getStatus() == null || journalEntry.getStatus() != Status.IN_REVIEW){
+            throw new InvalidJournalEntryStateException(ErrorMessages.ONLY_JOURNAL_ENTRY_WITH_STATUS_IN_REVIEW_CAN_BE_REVIEWED);
+        }
+        if (journalEntry.getReviewNotes() == null || journalEntry.getReviewNotes().isBlank()){
+            throw new JournalEntryMissingReviewNotesException(ErrorMessages.REVIEW_NOTES_REQUIRED);
+        }
+
+        journalEntry.setStatus(Status.REVIEWED);
+        journalEntry.setReviewedDate(LocalDateTime.now());
+
+        final JournalEntry savedJournalEntry = journalEntryRepository.save(journalEntry);
+
+        return toJournalEntryDto(savedJournalEntry);
     }
 
     @Override
-    public JournalEntryDto approveJournalEntry(Long journalEntryId) {
-        return null;
+    public JournalEntryDto approveJournalEntry(final Long journalEntryId) {
+        final JournalEntry journalEntry = journalEntryRepository.findById(journalEntryId).get();
+
+        journalEntry.setStatus(Status.APPROVED);
+        journalEntry.setApprovedDate(LocalDateTime.now());
+
+        final JournalEntry approvedJournalEntry = journalEntryRepository.save(journalEntry);
+        return toJournalEntryDto(approvedJournalEntry);
     }
 
     @Override
@@ -89,6 +113,7 @@ public class JournalEntryServiceImpl implements JournalEntryService {
                 journalEntry.getStatus(),
                 journalEntry.getDraftedDate(),
                 journalEntry.getReviewedDate(),
+                journalEntry.getApprovedDate(),
                 journalEntry.getAccountant() != null ? journalEntry.getAccountant().getName() : null,
                 journalEntry.getReviewNotes(),
                 journalEntry.getApproveNotes()

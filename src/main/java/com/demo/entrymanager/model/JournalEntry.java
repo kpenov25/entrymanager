@@ -9,6 +9,7 @@ public class JournalEntry {
     private Status status;
     private LocalDateTime draftedDate;
     private LocalDateTime reviewedDate;
+    private LocalDateTime approvedDate;
     private String reviewNotes;
     private String approveNotes;
     private Accountant accountant;
@@ -63,6 +64,14 @@ public class JournalEntry {
         this.reviewedDate = reviewedDate;
     }
 
+    public LocalDateTime getApprovedDate() {
+        return approvedDate;
+    }
+
+    public void setApprovedDate(LocalDateTime approvedDate) {
+        this.approvedDate = approvedDate;
+    }
+
     public String getReviewNotes() {
         return reviewNotes;
     }
@@ -97,6 +106,7 @@ public class JournalEntry {
                 status == journalEntry.status &&
                 Objects.equals(draftedDate, journalEntry.draftedDate) &&
                 Objects.equals(reviewedDate, journalEntry.reviewedDate) &&
+                Objects.equals(approvedDate, journalEntry.approvedDate) &&
                 Objects.equals(reviewNotes, journalEntry.reviewNotes) &&
                 Objects.equals(approveNotes, journalEntry.approveNotes)&&
                 Objects.equals(accountant, journalEntry.accountant);
@@ -104,7 +114,7 @@ public class JournalEntry {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, scenario, status, draftedDate, reviewedDate, reviewNotes, approveNotes, accountant);
+        return Objects.hash(id, scenario, status, draftedDate, reviewedDate, approvedDate, reviewNotes, approveNotes, accountant);
     }
 
 }
