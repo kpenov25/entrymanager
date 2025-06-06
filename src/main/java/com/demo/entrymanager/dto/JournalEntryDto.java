@@ -10,6 +10,7 @@ public record JournalEntryDto(
         Status status,
         LocalDateTime draftedDate,
         LocalDateTime reviewedDate,
+        LocalDateTime approvedDate,
         String assignedAccountant,
         String reviewNotes,
         String approveNotes

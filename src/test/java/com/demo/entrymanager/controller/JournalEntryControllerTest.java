@@ -61,8 +61,8 @@ public class JournalEntryControllerTest {
         //arrange
         final String accountantName = "David Marshall";
         final String journalEntryScenario = "On 27 May 2025, company XX purchased office supplies for $500 in cash.";
-        final JournalEntryDto journalEntryDto1 = new JournalEntryDto(1L, journalEntryScenario, Status.DRAFT, LocalDateTime.now(), null, accountantName, null, null);
-        final JournalEntryDto journalEntryDto2 = new JournalEntryDto(2L, journalEntryScenario, Status.DRAFT, LocalDateTime.now().minusDays(2), null, accountantName, null, null);
+        final JournalEntryDto journalEntryDto1 = new JournalEntryDto(1L, journalEntryScenario, Status.DRAFT, LocalDateTime.now(), null, null, accountantName, null, null);
+        final JournalEntryDto journalEntryDto2 = new JournalEntryDto(2L, journalEntryScenario, Status.DRAFT, LocalDateTime.now().minusDays(2), null, null, accountantName, null, null);
         final List<JournalEntryDto> filteredJournalEntries = List.of(journalEntryDto1, journalEntryDto2);
         when(journalEntryService.getJournalEntries(any(FilterJournalEntryDto.class)))
                 .thenReturn(filteredJournalEntries);
@@ -102,7 +102,7 @@ public class JournalEntryControllerTest {
         //arrange
         final Long journalEntryId = 1L;
         final String journalEntryScenario = "On 27 May 2025, company XX purchased office supplies for $500 in cash.";
-        final JournalEntryDto journalEntryDto = new JournalEntryDto(journalEntryId, journalEntryScenario, Status.DRAFT, null, null, null, null, null);
+        final JournalEntryDto journalEntryDto = new JournalEntryDto(journalEntryId, journalEntryScenario, Status.DRAFT, null, null, null, null, null, null);
         when(journalEntryService.getJournalEntryById(journalEntryId))
                 .thenReturn(journalEntryDto);
         //act
@@ -120,7 +120,7 @@ public class JournalEntryControllerTest {
         //arrange
         final Long journalEntryId = 1L;
         final String journalEntryScenario = "On 27 May 2025, company XX purchased office supplies for $500 in cash.";
-        final JournalEntryDto journalEntryDto = new JournalEntryDto(journalEntryId, journalEntryScenario, Status.DRAFT, null, null, null, null, null);
+        final JournalEntryDto journalEntryDto = new JournalEntryDto(journalEntryId, journalEntryScenario, Status.DRAFT, null, null, null, null, null, null);
         when(journalEntryService.updateJournalEntry(journalEntryId, journalEntryDto))
                 .thenThrow(new InvalidJournalEntryStateException(ErrorMessages.APPROVED_JOURNAL_ENTRIES_CAN_NOT_BE_UPDATED));
         //act
@@ -137,7 +137,7 @@ public class JournalEntryControllerTest {
         //arrange
         final Long journalEntryId = 1L;
         final String journalEntryScenario = "On 27 May 2025, company XX purchased office supplies for $500 in cash.";
-        final JournalEntryDto journalEntryDto = new JournalEntryDto(journalEntryId, journalEntryScenario, Status.DRAFT, null, null, null, null, null);
+        final JournalEntryDto journalEntryDto = new JournalEntryDto(journalEntryId, journalEntryScenario, Status.DRAFT, null, null, null, null, null, null);
         when(journalEntryService.updateJournalEntry(eq(journalEntryId), any(JournalEntryDto.class)))
                 .thenThrow(new JournalEntryNotFoundException(ErrorMessages.JOURNAL_ENTRY_NOT_FOUND));
         //act
@@ -155,7 +155,7 @@ public class JournalEntryControllerTest {
         //arrange
         final Long journalEntryId = 1L;
         final String journalEntryScenario = "On 27 May 2025, company XX purchased office supplies for $500 in cash.";
-        final JournalEntryDto journalEntryDto = new JournalEntryDto(journalEntryId, journalEntryScenario, Status.DRAFT, null, null, null, null, null);
+        final JournalEntryDto journalEntryDto = new JournalEntryDto(journalEntryId, journalEntryScenario, Status.DRAFT, null, null, null, null, null, null);
         when(journalEntryService.updateJournalEntry(eq(journalEntryId), any(JournalEntryDto.class)))
                 .thenReturn(journalEntryDto);
         //act
@@ -221,7 +221,7 @@ public class JournalEntryControllerTest {
         final String reviewNotes = "reviewed without comments";
         final String approveNotes = "accepted without comments";
         final JournalEntryDto journalEntryDto = new JournalEntryDto(
-                journalEntryId, journalEntryScenario, Status.APPROVED, null, null, accountantName, reviewNotes, approveNotes);
+                journalEntryId, journalEntryScenario, Status.APPROVED, null, null, null, accountantName, reviewNotes, approveNotes);
         when(journalEntryService.approveJournalEntry(journalEntryId))
                 .thenReturn(journalEntryDto);
 
@@ -266,7 +266,7 @@ public class JournalEntryControllerTest {
         final String journalEntryScenario = "On 27 May 2025, company XX purchased office supplies for $500 in cash.";
         final String reviewNotes = "reviewed without comments";
         final JournalEntryDto journalEntryDto = new JournalEntryDto(
-                journalEntryId, journalEntryScenario, Status.REVIEWED, null, null, accountantName, reviewNotes, null);
+                journalEntryId, journalEntryScenario, Status.REVIEWED, null, null, null, accountantName, reviewNotes, null);
 
         when(journalEntryService.reviewJournalEntry(journalEntryId))
                 .thenReturn(journalEntryDto);
@@ -333,7 +333,7 @@ public class JournalEntryControllerTest {
         final Long journalEntryId = 1L;
         final String journalEntryScenario = "On 27 May 2025, company XX purchased office supplies for $500 in cash.";
         final JournalEntryDto journalEntryDto = new JournalEntryDto(
-                journalEntryId, journalEntryScenario, Status.IN_REVIEW, null, null, accountantName, null, null);
+                journalEntryId, journalEntryScenario, Status.IN_REVIEW, null, null, null, accountantName, null, null);
         when(journalEntryService.assignAccountantToJournalEntry(journalEntryId, accountantId))
                 .thenReturn(journalEntryDto);
         //act
@@ -348,7 +348,7 @@ public class JournalEntryControllerTest {
     @Test
     void givenJournalEntryWithoutScenario_whenJournalEntryIsCreated_thenThrowException() throws Exception{
         //arrange
-        final JournalEntryDto journalEntryDto = new JournalEntryDto(null, null, Status.DRAFT, null, null, null, null, null);
+        final JournalEntryDto journalEntryDto = new JournalEntryDto(null, null, Status.DRAFT, null, null, null, null, null, null);
         when(journalEntryService.createJournalEntry(any(JournalEntryDto.class)))
                 .thenThrow(new MissingScenarioException(ErrorMessages.SCENARIO_MISSING));
         //act
@@ -366,7 +366,7 @@ public class JournalEntryControllerTest {
     void givenJournalEntryDetails_whenJournalEntryIsCreated_thenJournalEntrySaved() throws Exception{
         //arrange
         final String journalEntryScenario = "On 27 May 2025, company XX purchased office supplies for $500 in cash.";
-        final JournalEntryDto journalEntryDto = new JournalEntryDto(null, journalEntryScenario, Status.DRAFT, null, null, null, null, null);
+        final JournalEntryDto journalEntryDto = new JournalEntryDto(null, journalEntryScenario, Status.DRAFT, null, null, null, null, null, null);
         when(journalEntryService.createJournalEntry(any(JournalEntryDto.class)))
                 .thenReturn(journalEntryDto);
         //act
