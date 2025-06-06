@@ -12,6 +12,8 @@ public final class ErrorMessages {
     public static final String APPROVED_JOURNAL_ENTRIES_CAN_NOT_BE_UPDATED = "APPROVED Journal Entry cannot be updated";
     public static final String INVALID_DATE_RANGE = "Invalid date range";
     public static final String SCENARIO_MISSING = "Scenario is required during draft creation";
+    public static final String SCENARIO_CAN_ONLY_BE_UPDATED_WHEN_JOURNAL_ENTRY_STATUS_IS_DRAFT = "Scenario can only be updated when journal entry status is DRAFT";
+    public static final String REVIEW_NOTES_CAN_ONLY_BE_UPDATED_WHEN_JOURNAL_ENTRY_STATUS_IS_IN_REVIEW = "Review notes can only be updated when journal entry status is IN_REVIEW";
 
     private ErrorMessages(){};
 

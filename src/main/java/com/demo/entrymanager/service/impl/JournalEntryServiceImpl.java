@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class JournalEntryServiceImpl implements JournalEntryService {
@@ -44,11 +44,12 @@ public class JournalEntryServiceImpl implements JournalEntryService {
 
     @Override
     public JournalEntryDto assignAccountantToJournalEntry(final Long journalEntryId, final Long accountantId) {
-        final JournalEntry journalEntry = journalEntryRepository.findById(journalEntryId)
-                .orElseThrow(()->new JournalEntryNotFoundException(ErrorMessages.JOURNAL_ENTRY_NOT_FOUND));
-        if(journalEntry.getStatus() == null || journalEntry.getStatus() != Status.DRAFT){
+        final JournalEntry journalEntry = getJournalEntry(journalEntryId);
+
+        if(journalEntry.getStatus() != Status.DRAFT){
             throw new InvalidJournalEntryStateException(ErrorMessages.ONLY_JOURNAL_ENTRY_WITH_STATUS_DRAFT_CAN_BE_ASSIGNED_TO_AN_ACCOUNTANT);
         }
+
         final Accountant accountant = accountantRepository.findById(accountantId)
                 .orElseThrow(()->new AccountantNotFoundException(ErrorMessages.ACCOUNTANT_NOT_FOUND));
 
@@ -62,15 +63,9 @@ public class JournalEntryServiceImpl implements JournalEntryService {
 
     @Override
     public JournalEntryDto reviewJournalEntry(final Long journalEntryId) {
-        final JournalEntry journalEntry = journalEntryRepository.findById(journalEntryId)
-                .orElseThrow(()->new JournalEntryNotFoundException(ErrorMessages.JOURNAL_ENTRY_NOT_FOUND));
+        final JournalEntry journalEntry = getJournalEntry(journalEntryId);
 
-        if(journalEntry.getStatus() == null || journalEntry.getStatus() != Status.IN_REVIEW){
-            throw new InvalidJournalEntryStateException(ErrorMessages.ONLY_JOURNAL_ENTRY_WITH_STATUS_IN_REVIEW_CAN_BE_REVIEWED);
-        }
-        if (journalEntry.getReviewNotes() == null || journalEntry.getReviewNotes().isBlank()){
-            throw new JournalEntryMissingReviewNotesException(ErrorMessages.REVIEW_NOTES_REQUIRED);
-        }
+        validateJournalEntryBeforeReviewing(journalEntry);
 
         journalEntry.setStatus(Status.REVIEWED);
         journalEntry.setReviewedDate(LocalDateTime.now());
@@ -82,7 +77,9 @@ public class JournalEntryServiceImpl implements JournalEntryService {
 
     @Override
     public JournalEntryDto approveJournalEntry(final Long journalEntryId) {
-        final JournalEntry journalEntry = journalEntryRepository.findById(journalEntryId).get();
+        final JournalEntry journalEntry = getJournalEntry(journalEntryId);
+
+        validateJournalEntryBeforeApproval(journalEntry);
 
         journalEntry.setStatus(Status.APPROVED);
         journalEntry.setApprovedDate(LocalDateTime.now());
@@ -92,18 +89,88 @@ public class JournalEntryServiceImpl implements JournalEntryService {
     }
 
     @Override
-    public JournalEntryDto updateJournalEntry(Long journalEntryId, JournalEntryDto journalEntryDto) {
-        return null;
+    public JournalEntryDto updateJournalEntry(final Long journalEntryId, final JournalEntryDto journalEntryDto) {
+        final JournalEntry journalEntry = getJournalEntry(journalEntryId);
+        final Status status = journalEntry.getStatus();
+
+        if(status == Status.DRAFT){
+            if(requiresUpdate(journalEntry.getReviewNotes(), journalEntryDto.reviewNotes())){
+                throw new InvalidJournalEntryStateException(ErrorMessages.REVIEW_NOTES_CAN_ONLY_BE_UPDATED_WHEN_JOURNAL_ENTRY_STATUS_IS_IN_REVIEW);
+            }
+
+            journalEntry.setScenario(journalEntryDto.scenario());
+        }else if(status == Status.IN_REVIEW){
+            if(requiresUpdate(journalEntry.getScenario(), journalEntryDto.scenario())){
+                throw new InvalidJournalEntryStateException(ErrorMessages.SCENARIO_CAN_ONLY_BE_UPDATED_WHEN_JOURNAL_ENTRY_STATUS_IS_DRAFT);
+            }
+
+            journalEntry.setReviewNotes(journalEntryDto.reviewNotes());
+        }else if(status == Status.REVIEWED){
+            if(requiresUpdate(journalEntry.getScenario(), journalEntryDto.scenario())){
+                throw new InvalidJournalEntryStateException(ErrorMessages.SCENARIO_CAN_ONLY_BE_UPDATED_WHEN_JOURNAL_ENTRY_STATUS_IS_DRAFT);
+            }
+            if(requiresUpdate(journalEntry.getReviewNotes(), journalEntryDto.reviewNotes())){
+                throw new InvalidJournalEntryStateException(ErrorMessages.REVIEW_NOTES_CAN_ONLY_BE_UPDATED_WHEN_JOURNAL_ENTRY_STATUS_IS_IN_REVIEW);
+            }
+
+        }else if(status == Status.APPROVED){
+            if(requiresUpdate(journalEntry.getScenario(), journalEntryDto.scenario())){
+                throw new InvalidJournalEntryStateException(ErrorMessages.SCENARIO_CAN_ONLY_BE_UPDATED_WHEN_JOURNAL_ENTRY_STATUS_IS_DRAFT);
+            }
+            if(requiresUpdate(journalEntry.getReviewNotes(), journalEntryDto.reviewNotes())){
+                throw new InvalidJournalEntryStateException(ErrorMessages.REVIEW_NOTES_CAN_ONLY_BE_UPDATED_WHEN_JOURNAL_ENTRY_STATUS_IS_IN_REVIEW);
+            }
+
+
+        }
+
+
+        final JournalEntry updatedJournalEntry = journalEntryRepository.save(journalEntry);
+
+        return toJournalEntryDto(updatedJournalEntry);
+    }
+
+    private boolean requiresUpdate(String oldVal, String newVal) {
+        if (oldVal == null && newVal == null) {
+            return false;
+        }
+        if (oldVal == null || newVal == null) {
+            return true;
+        }
+        return !oldVal.equals(newVal);
     }
 
     @Override
-    public JournalEntryDto getJournalEntryById(Long journalEntryId) {
-        return null;
+    public JournalEntryDto getJournalEntryById(final Long journalEntryId) {
+        final JournalEntry journalEntry = getJournalEntry(journalEntryId);
+
+        return toJournalEntryDto(journalEntry);
     }
 
+
     @Override
-    public List<JournalEntryDto> getJournalEntries(FilterJournalEntryDto filterJournalEntryDto) {
-        return null;
+    public List<JournalEntryDto> getJournalEntries(final FilterJournalEntryDto filterJournalEntryDto) {
+        if(filterJournalEntryDto.draftedDate() != null
+                && filterJournalEntryDto.reviewedDate() != null
+        && filterJournalEntryDto.draftedDate().isAfter(filterJournalEntryDto.reviewedDate())){
+                throw new InvalidDateRangeException(ErrorMessages.INVALID_DATE_RANGE);
+        }
+        final List<JournalEntry> filteredJournalEntries = journalEntryRepository.findWithFilters(
+                filterJournalEntryDto.status(),
+                filterJournalEntryDto.draftedDate(),
+                filterJournalEntryDto.reviewedDate(),
+                filterJournalEntryDto.assignedAccountant()
+        );
+
+        return filteredJournalEntries
+                .stream()
+                .map(this::toJournalEntryDto)
+                .collect(Collectors.toList());
+    }
+
+    private JournalEntry getJournalEntry(final Long journalEntryId) {
+        return journalEntryRepository.findById(journalEntryId)
+                .orElseThrow(() -> new JournalEntryNotFoundException(ErrorMessages.JOURNAL_ENTRY_NOT_FOUND));
     }
 
     private JournalEntryDto toJournalEntryDto(final JournalEntry journalEntry){
@@ -119,4 +186,23 @@ public class JournalEntryServiceImpl implements JournalEntryService {
                 journalEntry.getApproveNotes()
         );
     }
+
+    private void validateJournalEntryBeforeReviewing(final JournalEntry journalEntry) {
+        if(journalEntry.getStatus() != Status.IN_REVIEW){
+            throw new InvalidJournalEntryStateException(ErrorMessages.ONLY_JOURNAL_ENTRY_WITH_STATUS_IN_REVIEW_CAN_BE_REVIEWED);
+        }
+        if (journalEntry.getReviewNotes() == null || journalEntry.getReviewNotes().isBlank()){
+            throw new JournalEntryMissingReviewNotesException(ErrorMessages.REVIEW_NOTES_REQUIRED);
+        }
+    }
+
+    private void validateJournalEntryBeforeApproval(final JournalEntry journalEntry) {
+        if(journalEntry.getApproveNotes() == null || journalEntry.getApproveNotes().isBlank()){
+            throw new JournalEntryMissingApproveNotesException(ErrorMessages.APPROVE_NOTES_REQUIRED);
+        }
+        if(journalEntry.getStatus() != Status.REVIEWED){
+            throw new InvalidJournalEntryStateException(ErrorMessages.ONLY_JOURNAL_ENTRY_WITH_STATUS_REVIEWED_CAN_BE_APPROVED);
+        }
+    }
+
 }
