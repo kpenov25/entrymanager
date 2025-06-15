@@ -1,10 +1,18 @@
 package com.demo.entrymanager.model;
 
+import jakarta.persistence.*;
+
 import java.util.Objects;
 
+@Entity
 public class Accountant {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+
+    public Accountant() {
+    }
 
     public Accountant(Long id, String name) {
         this.id = id;

@@ -54,7 +54,7 @@ public class JournalEntryServiceImpl implements JournalEntryService {
                 .orElseThrow(()->new AccountantNotFoundException(ErrorMessages.ACCOUNTANT_NOT_FOUND));
 
         journalEntry.setStatus(Status.IN_REVIEW);
-        journalEntry.setAccountant(accountant);
+        journalEntry.setAssignedAccountant(accountant);
 
         final JournalEntry savedJournalEntry = journalEntryRepository.save(journalEntry);
 
@@ -181,7 +181,7 @@ public class JournalEntryServiceImpl implements JournalEntryService {
                 journalEntry.getDraftedDate(),
                 journalEntry.getReviewedDate(),
                 journalEntry.getApprovedDate(),
-                journalEntry.getAccountant() != null ? journalEntry.getAccountant().getName() : null,
+                journalEntry.getAssignedAccountant() != null ? journalEntry.getAssignedAccountant().getName() : null,
                 journalEntry.getReviewNotes(),
                 journalEntry.getApproveNotes()
         );

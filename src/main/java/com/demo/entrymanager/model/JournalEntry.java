@@ -1,18 +1,30 @@
 package com.demo.entrymanager.model;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Entity
 public class JournalEntry {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String scenario;
+
+    @Enumerated(EnumType.STRING)
     private Status status;
+
     private LocalDateTime draftedDate;
     private LocalDateTime reviewedDate;
     private LocalDateTime approvedDate;
     private String reviewNotes;
     private String approveNotes;
-    private Accountant accountant;
+
+    @ManyToOne
+    @JoinColumn(name = "assignedAccountantId")
+    private Accountant assignedAccountant;
 
     public JournalEntry() {
     }
@@ -88,12 +100,12 @@ public class JournalEntry {
         this.approveNotes = approveNotes;
     }
 
-    public Accountant getAccountant() {
-        return accountant;
+    public Accountant getAssignedAccountant() {
+        return assignedAccountant;
     }
 
-    public void setAccountant(Accountant accountant) {
-        this.accountant = accountant;
+    public void setAssignedAccountant(Accountant assignedAccountant) {
+        this.assignedAccountant = assignedAccountant;
     }
 
     @Override
@@ -109,12 +121,12 @@ public class JournalEntry {
                 Objects.equals(approvedDate, journalEntry.approvedDate) &&
                 Objects.equals(reviewNotes, journalEntry.reviewNotes) &&
                 Objects.equals(approveNotes, journalEntry.approveNotes)&&
-                Objects.equals(accountant, journalEntry.accountant);
+                Objects.equals(assignedAccountant, journalEntry.assignedAccountant);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, scenario, status, draftedDate, reviewedDate, approvedDate, reviewNotes, approveNotes, accountant);
+        return Objects.hash(id, scenario, status, draftedDate, reviewedDate, approvedDate, reviewNotes, approveNotes, assignedAccountant);
     }
 
 }

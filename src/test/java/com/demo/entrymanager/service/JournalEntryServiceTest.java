@@ -571,7 +571,7 @@ public class JournalEntryServiceTest {
         final String accountantName = "David Marshall";
         final Accountant accountant = new Accountant(accountantId, accountantName);
         final JournalEntry savedJournalEntry = new JournalEntry(journalEntryId, scenario, Status.IN_REVIEW, LocalDateTime.now());
-        savedJournalEntry.setAccountant(accountant);
+        savedJournalEntry.setAssignedAccountant(accountant);
 
         when(journalEntryRepository.findById(journalEntryId)).thenReturn(Optional.of(draftedJournalEntry));
         when(journalEntryRepository.save(any(JournalEntry.class))).thenReturn(savedJournalEntry);
@@ -593,7 +593,7 @@ public class JournalEntryServiceTest {
         assertEquals(scenario, capturedEntry.getScenario());
         assertEquals(Status.IN_REVIEW, capturedEntry.getStatus());
         assertNotNull(capturedEntry.getDraftedDate());
-        assertEquals(accountantName, capturedEntry.getAccountant().getName());
+        assertEquals(accountantName, capturedEntry.getAssignedAccountant().getName());
     }
 
 
